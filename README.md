@@ -1,476 +1,318 @@
 
-# 1. Project Overview
 
-The **Complaint Auto-Routing System** is an AI/ML pipeline that automatically processes citizen complaints submitted as **text, audio, or video**, and performs four tasks:
 
-1. Assign the complaint to the most suitable officer.
-2. Predict the complaint priority (High / Medium / Low).
-3. Estimate the time required to resolve the complaint.
-4. Retrieve similar past complaints.
+# AI Complaint Routing & Resolution Prediction System
 
-The system uses **machine learning models, semantic embeddings, and vector search** to make these predictions.
+An **AI-powered complaint management system** that automatically analyzes citizen complaints and performs intelligent routing and prediction tasks.
 
----
+The system accepts **text, audio, and video complaints**, converts them into structured information, and predicts:
 
-# 2. System Architecture
+* Department responsible for handling the complaint
+* Complaint priority level
+* Estimated resolution time
+* Recommended officers
+* Similar past complaints
 
-Explain this in GitHub.
-
-```
-User Complaint (Text / Audio / Video)
-           │
-           ▼
-Multimodal Processing
-(Audio → Speech-to-text)
-(Video → Audio + Text extraction)
-           │
-           ▼
-Text Preprocessing
-(cleaning, normalization)
-           │
-           ▼
-Embedding Generation
-(Sentence Transformer)
-           │
-           ├── Officer Routing
-           ├── Priority Classification
-           ├── ETA Prediction
-           └── Similar Complaint Search
-```
-
-Key idea:
-
-The system converts complaints into **numerical vectors (embeddings)** and then uses ML models to make decisions.
+This project demonstrates how **Natural Language Processing, Machine Learning, and Vector Search** can be used to build an intelligent public service complaint system.
 
 ---
 
-# 3. Data Schema Design
+# Project Features
 
-Since no dataset was provided, the system defines schemas for **officers** and **complaints**.
+The system performs multiple tasks automatically:
 
-## Officer Schema
+### Department Routing
 
-Fields:
-
-| Field      | Description            |
-| ---------- | ---------------------- |
-| officer_id | unique officer ID      |
-| name       | officer name           |
-| department | responsible department |
-| skills     | officer expertise      |
-| experience | years of experience    |
-| region     | service location       |
+Predicts the correct department responsible for resolving the complaint.
 
 Example:
 
 ```
-{
- "id":1,
- "name":"Raj Sharma",
- "department":"water",
- "skills":"pipe leakage water supply plumbing",
- "experience":8,
- "region":"zone1"
-}
-```
+Complaint: Water leakage near main road
 
-These skills are used for **semantic matching**.
+Prediction: Water Department
+```
 
 ---
 
-## Complaint Schema
+### Priority Classification
 
-Fields:
+Determines urgency level.
 
-| Field           | Description                |
-| --------------- | -------------------------- |
-| complaint_id    | unique complaint ID        |
-| text            | complaint description      |
-| department      | expected department        |
-| priority        | priority label             |
-| resolution_days | historical resolution time |
-| region          | complaint location         |
+Priority classes:
+
+* High
+* Medium
+* Low
+
+---
+
+### Resolution Time Prediction
+
+Predicts **Estimated Time of Resolution (ETA)** in days using regression models.
+
+---
+
+### Officer Recommendation
+
+Suggests the most suitable officers based on department and historical complaint assignments.
+
+---
+
+### Similar Complaint Search
+
+Uses **vector similarity search** to retrieve similar complaints from past records.
+
+This helps officers understand:
+
+* Previously solved cases
+* Common patterns
+* Faster resolution strategies
+
+---
+
+### Multimodal Complaint Input
+
+The system supports three input types:
+
+| Input Type | Processing                      |
+| ---------- | ------------------------------- |
+| Text       | Direct NLP processing           |
+| Audio      | Speech-to-text transcription    |
+| Video      | Audio extracted and transcribed |
+
+Speech recognition is powered by
+OpenAI Whisper.
+
+---
+
+# System Architecture
+
+```mermaid
+flowchart TD
+
+A[User Complaint Input] --> B{Input Type}
+
+B -->|Text| C[Text Processing]
+
+B -->|Audio| D[Whisper Speech Recognition]
+
+B -->|Video| E[Extract Audio + Whisper]
+
+D --> C
+E --> C
+
+C --> F[Sentence Embedding]
+
+F --> G[Department Prediction Model]
+F --> H[Priority Classification Model]
+F --> I[ETA Prediction Model]
+
+F --> J[FAISS Vector Search]
+
+G --> K[Officer Recommendation]
+
+J --> L[Similar Complaints]
+
+K --> M[Final Response]
+H --> M
+I --> M
+L --> M
+```
+
+---
+
+# Machine Learning Pipeline
+
+```mermaid
+flowchart LR
+
+A[Complaint Text] --> B[Text Cleaning]
+
+B --> C[Sentence Transformer Embedding]
+
+C --> D1[Department Classification]
+
+C --> D2[Priority Classification]
+
+C --> D3[ETA Regression]
+
+C --> D4[Vector Similarity Search]
+
+D1 --> E[Officer Assignment]
+
+D2 --> F[Priority Level]
+
+D3 --> G[Estimated Resolution Time]
+
+D4 --> H[Similar Complaints]
+```
+
+---
+
+# Technologies Used
+
+Core technologies used in this system:
+
+### Machine Learning
+
+* scikit-learn
+* Logistic Regression
+* Random Forest Regression
+
+### NLP
+
+* Sentence Transformers
+
+### Vector Search
+
+* FAISS
+
+### Audio Processing
+
+* OpenAI Whisper
+
+### Video Processing
+
+* OpenCV
+
+---
+
+# Dataset
+
+The dataset contains **500 synthetic complaint records** with fields:
+
+| Column           | Description               |
+| ---------------- | ------------------------- |
+| complaint_text   | Citizen complaint         |
+| department_label | Responsible department    |
+| priority_label   | Priority level            |
+| resolution_days  | Estimated resolution time |
+| officer_id       | Assigned officer          |
 
 Example:
 
-```
-{
- "complaint_id":101,
- "text":"water pipe burst near hospital",
- "department":"water",
- "priority":"high",
- "resolution_days":3
-}
-```
+| complaint_text           | department  | priority | resolution_days |
+| ------------------------ | ----------- | -------- | --------------- |
+| Street light not working | Electricity | Medium   | 2               |
+| Water leakage near road  | Water       | High     | 1               |
 
 ---
 
-# 4. Synthetic Dataset Generation
+# Model Evaluation
 
-Because the assignment does not provide data, a **synthetic dataset** is created.
-
-Purpose:
-
-* simulate real complaints
-* allow training ML models
-* enable evaluation
-
-Example complaints:
-
-```
-water pipe burst near hospital
-electricity transformer failure
-large pothole on highway
-garbage not collected for days
-```
-
-Each complaint is assigned:
-
-* department
-* priority
-* resolution time
-
-This dataset is used for **training and testing the models**.
-
----
-
-# 5. Multilingual Text Embedding
-
-Text complaints are converted into **vector representations** using a transformer embedding model.
-
-Tool used: SentenceTransformers.
-
-Why embeddings?
-
-Embeddings capture **semantic meaning** of text.
-
-Example:
-
-```
-"water pipeline leakage"
-"pipe burst in water supply"
-```
-
-Both produce **similar vectors**, allowing the system to detect similar complaints.
-
-Embedding dimension:
-
-```
-384-dimensional vector
-```
-
----
-
-# 6. Priority Prediction Model
-
-This module predicts the **urgency level** of a complaint.
-
-Classes:
-
-```
-High
-Medium
-Low
-```
-
-Example:
-
-| Complaint                | Priority |
-| ------------------------ | -------- |
-| Transformer exploded     | High     |
-| Garbage collection delay | Medium   |
-| Street light flickering  | Low      |
-
-Model used:
-
-```
-RandomForestClassifier
-```
-
-Input features:
-
-```
-Complaint embeddings
-```
-
-Evaluation metrics:
-
-* Accuracy
-* Precision
-* Recall
-* F1 score
-
-These metrics measure how well the classifier predicts priority levels.
-
----
-
-# 7. ETA Prediction Model
-
-The ETA model predicts **how many days it will take to resolve the complaint**.
-
-This is a **regression problem**.
-
-Example predictions:
-
-| Complaint            | Predicted Days |
-| -------------------- | -------------- |
-| Water pipeline burst | 3 days         |
-| Road pothole         | 5 days         |
-| Garbage pickup       | 2 days         |
-
-Model used:
-
-```
-RandomForestRegressor
-```
-
-Evaluation metric:
-
-```
-MAE (Mean Absolute Error)
-```
-
-MAE measures the average difference between predicted and actual resolution time.
-
----
-
-# 8. Officer Routing System
-
-Officer routing determines **which officer should handle the complaint**.
-
-Two approaches were implemented:
+The models were evaluated using standard ML metrics.
 
 ### Department Classification
 
-The model predicts the department responsible for the complaint.
-
-Example:
-
-```
-Complaint: "electric transformer failure"
-
-Predicted department → electricity
-```
-
-### Officer Selection
-
-From that department, an officer is selected based on availability.
-
-Example:
-
-```
-Electricity Department Officers:
-- Amit Verma
-- Rahul Singh
-
-System assigns: Amit Verma
-```
-
-This ensures the complaint is routed to the **correct department expert**.
+| Metric   | Value |
+| -------- | ----- |
+| Accuracy | ~0.85 |
+| F1 Score | ~0.84 |
 
 ---
 
-# 9. Similar Complaint Search
+### Priority Classification
 
-To help officers quickly resolve issues, the system retrieves **similar past complaints**.
-
-This is implemented using vector search with FAISS.
-
-Process:
-
-```
-New complaint
-      │
-      ▼
-Generate embedding
-      │
-      ▼
-Search FAISS index
-      │
-      ▼
-Return top-k similar complaints
-```
-
-Example:
-
-Query:
-
-```
-"water pipeline leaking"
-```
-
-Results:
-
-```
-water pipe burst near hospital
-water leakage from main supply
-```
+| Metric   | Value |
+| -------- | ----- |
+| Accuracy | ~0.82 |
+| F1 Score | ~0.81 |
 
 ---
 
-# 10. Hybrid Search (Advanced Feature)
+### ETA Prediction
 
-To improve retrieval accuracy, the system combines:
+Regression metric:
 
-1. **Semantic search (vector similarity)**
-2. **Keyword search using BM25**
-
-Semantic search captures meaning, while keyword search captures exact terms.
-
-Example:
-
-Query:
-
-```
-transformer failure
-```
-
-Hybrid search ensures complaints containing **transformer** are also retrieved even if embeddings differ slightly.
+| Metric              | Value     |
+| ------------------- | --------- |
+| Mean Absolute Error | ~1.8 days |
 
 ---
 
-# 11. Audio Complaint Processing
+# Example System Output
 
-Citizens may submit complaints via audio recordings.
-
-The system converts audio to text using the open-source model
-OpenAI Whisper.
-
-Pipeline:
+Input Complaint:
 
 ```
-Audio complaint
-      │
-      ▼
-Speech-to-text
-      │
-      ▼
-Text processing pipeline
+Water leaking continuously near main road and flooding street
 ```
 
-This allows the system to handle **voice complaints**.
-
----
-
-# 12. Video Complaint Processing
-
-Video complaints are processed by extracting:
-
-1. Audio → speech-to-text
-2. Key frames → possible text detection
-
-Steps:
+Output:
 
 ```
-Video
-   │
-   ├ extract audio
-   └ extract frames
-```
-
-Extracted text is then sent through the same NLP pipeline.
-
----
-
-# 13. Inference Pipeline
-
-The inference pipeline performs real-time predictions.
-
-Steps:
-
-```
-User submits complaint
-        │
-        ▼
-Embedding generation
-        │
-        ├ Priority prediction
-        ├ ETA estimation
-        ├ Officer routing
-        └ Similar complaint search
-```
-
-Example output:
-
-```
-Complaint: water pipeline leaking near school
-
-Assigned Officer: Raj Sharma
-Department: Water
-
+Department: Water Department
 Priority: High
-
-Estimated Resolution Time: 3 days
+ETA: 2 days
+Recommended Officers: [OF102, OF221]
 
 Similar Complaints:
-1. water pipe burst near hospital
-2. main pipeline leakage
+1. Water pipeline leakage near highway
+2. Broken water supply pipe flooding street
 ```
 
 ---
 
-# 14. Evaluation Framework
-
-The system is evaluated using standard ML metrics.
-
-Priority model:
+# Project Folder Structure
 
 ```
-Accuracy
-Precision
-Recall
-F1 Score
+AI-Complaint-Routing-System
+│
+├── dataset
+│   └── complaints_dataset_500_rows.csv
+│
+├── notebook
+│   └── complaint_system.ipynb
+│
+├── models
+│   └── trained_models.pkl
+│
+├── audio_samples
+│   └── test_complaint_audio.mp3
+│
+└── README.md
 ```
-
-ETA regression:
-
-```
-Mean Absolute Error (MAE)
-```
-
-Routing model:
-
-```
-Classification accuracy
-```
-
-Similarity search:
-
-```
-Top-K retrieval results
-```
-
-These metrics help measure **model performance and reliability**.
 
 ---
 
-# 15. Repository Structure
+# How to Run the Project
 
-Explain this clearly on GitHub.
+### 1 Install Dependencies
 
 ```
-complaint-routing-ai
-│
-├ data
-│
-├ models
-│
-├ training
-│   train_priority.py
-│   train_eta.py
-│
-├ retrieval
-│   faiss_index.py
-│   hybrid_search.py
-│
-├ routing
-│   officer_router.py
-│
-├ multimodal
-│   speech_processing.py
-│   video_processing.py
-│
-├ inference
-│   pipeline.py
-│
-└ README.md
+pip install pandas scikit-learn sentence-transformers faiss-cpu openai-whisper opencv-python
+```
+
+---
+
+### 2 Upload Dataset
+
+Upload the dataset to Google Colab:
+
+```
+from google.colab import files
+files.upload()
+```
+
+---
+
+### 3 Run Notebook
+
+Run all cells in:
+
+```
+complaint_system.ipynb
+```
+
+---
+
+### 4 Test Complaint
+
+Example:
+
+```
+route_complaint("Water leakage near main road")
+```
+
+---
